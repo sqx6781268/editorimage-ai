@@ -22,7 +22,7 @@ You say what you want in plain words — *"remove the background, extend the sky
 it works on real layers while you watch. Grab the mouse and fix anything at any point. Works with
 **Claude Code, Cursor, Codex, VS Code** and any [Model Context Protocol](https://modelcontextprotocol.io) client.
 
-> 🇮🇹 Italiano: [README.it.md](README.it.md) · Sister project for video: [editorvideo-ai (vedit)](https://github.com/metiutek/editorvideo-ai)
+> 🇮🇹 Italiano: [README.it.md](README.it.md) · 🇨🇳 简体中文: [README.zh.md](README.zh.md) · Sister project for video: [editorvideo-ai (vedit)](https://github.com/metiutek/editorvideo-ai)
 
 ## Install — 3 steps
 
