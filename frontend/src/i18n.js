@@ -244,7 +244,7 @@ const UI = {
     'default for Auto': '作为「自动」的默认',
     'The assistant asks': '助手在问你', No: '否', Yes: '是',
     'Local AI (rembg, OpenCV, ComfyUI) works without keys. Add a key to use online models too: the provider bills your account. Keys stay on this computer (~/.pedit/ai_api.json), never in documents.':
-      '本地 AI（rembg、OpenCV、ComfyUI）不需要密钥。填了密钥才能用在线模型：费用由该服务商向你的账号计费。密钥只留在本机（PEDIT_HOME 目录，本机为 D:\\应用程序\\pedit-mcp\\pedit-home\\ai_api.json），不会写进文档。',
+      '本地 AI（rembg、OpenCV、ComfyUI）不需要密钥。填了密钥才能用在线模型：费用由该服务商向你的账号计费。密钥只留在本机（PEDIT_HOME 目录下的 ai_api.json，未设该变量时是 ~/.pedit/ai_api.json），不会写进文档。',
   },
 }
 
