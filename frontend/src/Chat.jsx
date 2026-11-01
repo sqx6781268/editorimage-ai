@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, chatStream } from './api.js'
 import Icon from './Icons.jsx'
+import { provName, t } from './i18n.js'
 
 function Settings({ llm, onSaved }) {
   const [pid, setPid] = useState(llm?.provider || 'claude_code')
@@ -16,20 +17,20 @@ function Settings({ llm, onSaved }) {
   }
   return (
     <div className="llm-settings">
-      <label className="numfield wide"><span>Model</span>
+      <label className="numfield wide"><span>{t('Model')}</span>
         <select value={pid} onChange={e => setPid(e.target.value)}>
-          {llm?.providers?.map(x => <option key={x.id} value={x.id}>{x.nome}{x.pronto ? ' ✓' : ''}</option>)}
+          {llm?.providers?.map(x => <option key={x.id} value={x.id}>{provName(x.id, x.nome)}{x.pronto ? ' ✓' : ''}</option>)}
         </select></label>
       {p?.nota && <p className="hint">{p.nota}</p>}
       {p?.vuole_chiave && <label className="numfield wide"><span>API key</span>
-        <input type="password" placeholder={p.chiave || 'paste the key'} value={key} onChange={e => setKey(e.target.value)} /></label>}
-      {p?.indirizzo_modificabile && <label className="numfield wide"><span>Address</span>
+        <input type="password" placeholder={p.chiave || t('paste the key')} value={key} onChange={e => setKey(e.target.value)} /></label>}
+      {p?.indirizzo_modificabile && <label className="numfield wide"><span>{t('Address')}</span>
         <input value={url} onChange={e => setUrl(e.target.value)} /></label>}
-      <label className="numfield wide"><span>Model id</span>
-        <input list="modelli" value={model} onChange={e => setModel(e.target.value)} placeholder="default" />
+      <label className="numfield wide"><span>{t('Model id')}</span>
+        <input list="modelli" value={model} onChange={e => setModel(e.target.value)} placeholder={t('default')} />
         <datalist id="modelli">{p?.modelli?.map(m => <option key={m} value={m} />)}</datalist></label>
       {p && !p.pronto && <p className="warn">{p.motivo}</p>}
-      <button className="primary" onClick={save}>Use this model</button>
+      <button className="primary" onClick={save}>{t('Use this model')}</button>
     </div>
   )
 }
@@ -59,7 +60,7 @@ export default function Chat({ llm, setLlm, selection, selectedLayer }) {
     }
     if (ev.type === 'error') return [...m, { role: 'error', text: ev.message }]
     if (ev.type === 'note') return [...m, { role: 'note', text: ev.message }]
-    if (ev.type === 'stopped') return [...m, { role: 'note', text: 'stopped' }]
+    if (ev.type === 'stopped') return [...m, { role: 'note', text: t('stopped') }]
     return m
   })
 
@@ -78,37 +79,37 @@ export default function Chat({ llm, setLlm, selection, selectedLayer }) {
   return (
     <div className="chat">
       <div className="chat-top">
-        <span className={'chip' + (llm?.ok ? '' : ' bad')} title={llm?.motivo || ''}>{llm?.nome || 'no model'}{llm?.model ? ` · ${llm.model}` : ''}</span>
+        <span className={'chip' + (llm?.ok ? '' : ' bad')} title={llm?.motivo || ''}>
+          {llm?.nome ? provName(llm.provider, llm.nome) : t('no model')}{llm?.model ? ` · ${llm.model}` : ''}</span>
         <span className="grow" />
-        <button className="icon-btn" title="New conversation" onClick={() => { api('/api/chat/reset', { body: {} }); setMsgs([]) }}><Icon name="plus" size={15} /></button>
-        <button className="icon-btn" title="Settings" onClick={() => setShowSettings(!showSettings)}><Icon name="gear" size={15} /></button>
+        <button className="icon-btn" title={t('New conversation')} onClick={() => { api('/api/chat/reset', { body: {} }); setMsgs([]) }}><Icon name="plus" size={15} /></button>
+        <button className="icon-btn" title={t('Settings')} onClick={() => setShowSettings(!showSettings)}><Icon name="gear" size={15} /></button>
       </div>
       {showSettings && <Settings llm={llm} onSaved={r => { setLlm(r); if (r.ok) setShowSettings(false) }} />}
       <div className="msgs">
-        {!msgs.length && <div className="hint">
-          Ask for an edit in plain words: <i>“remove the background and put it on a soft blue gradient”</i>,
-          <i> “make it warmer and add a title at the bottom”</i>, <i>“remove the person on the left”</i>.
-          Every step lands in the layers and undoes with Ctrl+Z.</div>}
+        {!msgs.length && <div className="hint">{t('Ask for an edit in plain words:')} <i>{t('“remove the background and put it on a soft blue gradient”')}</i>,
+          <i> {t('“make it warmer and add a title at the bottom”')}</i>, <i>{t('“remove the person on the left”')}</i>.
+          {t('Every step lands in the layers and undoes with Ctrl+Z.')}</div>}
         {msgs.map((m, i) => m.role === 'tool'
           ? <details key={i} className={'tool ' + m.status}><summary>{m.status === 'run' ? '⋯' : m.status === 'ok' ? '✓' : '✕'} {m.name}</summary>
             <pre>{JSON.stringify(m.input, null, 1)}</pre>{m.error && <p className="warn">{m.error}</p>}</details>
           : <div key={i} className={'msg ' + m.role}>{m.text}
-            {m.refs?.length > 0 && <div className="refs">{m.refs.map((r, j) => <span key={j} className="tag">[{j + 1}] {r.type}</span>)}</div>}</div>)}
+            {m.refs?.length > 0 && <div className="refs">{m.refs.map((r, j) => <span key={j} className="tag">[{j + 1}] {t(r.type)}</span>)}</div>}</div>)}
         <div ref={endRef} />
       </div>
       <div className="chat-refs">
-        <button disabled={!selection} title="Point at the selected area"
-          onClick={() => setRefs(r => [...r, { type: 'area', box: selection.box }])}>+ area</button>
-        <button disabled={!selectedLayer} title="Point at the selected layer"
-          onClick={() => setRefs(r => [...r, { type: 'layer', id: selectedLayer.id, name: selectedLayer.name }])}>+ layer</button>
-        {refs.map((r, i) => <span key={i} className="tag" onClick={() => setRefs(x => x.filter((_, j) => j !== i))}>[{i + 1}] {r.type} ✕</span>)}
+        <button disabled={!selection} title={t('Point at the selected area')}
+          onClick={() => setRefs(r => [...r, { type: 'area', box: selection.box }])}>{t('+ area')}</button>
+        <button disabled={!selectedLayer} title={t('Point at the selected layer')}
+          onClick={() => setRefs(r => [...r, { type: 'layer', id: selectedLayer.id, name: selectedLayer.name }])}>{t('+ layer')}</button>
+        {refs.map((r, i) => <span key={i} className="tag" onClick={() => setRefs(x => x.filter((_, j) => j !== i))}>[{i + 1}] {t(r.type)} ✕</span>)}
       </div>
       <div className="chat-input">
-        <textarea rows={3} value={text} placeholder="What should change?" onChange={e => setText(e.target.value)}
+        <textarea rows={3} value={text} placeholder={t('What should change?')} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
         {busy
-          ? <button className="icon-btn big" title="Stop" onClick={() => api('/api/chat/stop', { body: {} })}><Icon name="stop" /></button>
-          : <button className="icon-btn big primary" title="Send" onClick={send}><Icon name="send" /></button>}
+          ? <button className="icon-btn big" title={t('Stop')} onClick={() => api('/api/chat/stop', { body: {} })}><Icon name="stop" /></button>
+          : <button className="icon-btn big primary" title={t('Send')} onClick={send}><Icon name="send" /></button>}
       </div>
     </div>
   )

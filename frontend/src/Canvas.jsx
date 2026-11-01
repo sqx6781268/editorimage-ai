@@ -3,6 +3,7 @@
 // Nessun pixel si calcola qui: ogni gesto finisce in un'operazione di Store.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { addPoint, boxArr, findLayer, fitScale, hitLayer, hitLayerDeep, rectFrom, resizeFromCorner } from './util.js'
+import { t } from './i18n.js'
 
 export default function Canvas({ project, revision, tool, toolOpts, selection, setSelection, selectedId,
   setSelectedId, run, zoom, setZoom, setCursor, onTextAt, onAI, maskMode, clone, setClone }) {
@@ -113,7 +114,7 @@ export default function Canvas({ project, revision, tool, toolOpts, selection, s
       const target = sel && sel.type === 'paint' && !sel.locked ? sel.id : null
       const o = toolOpts
       if (tool === 'spot') {
-        await onAI('inpaint', { points: d.points, size: o.size, feather: Math.max(2, o.size / 6) }, 'Healing…')
+        await onAI('inpaint', { points: d.points, size: o.size, feather: Math.max(2, o.size / 6) }, t('Healing…'))
       } else if (tool === 'clone') {
         // allineato: lo spostamento si fissa alla prima pennellata e resta
         const off = clone.offset || [clone.src.x - d.points[0][0], clone.src.y - d.points[0][1]]

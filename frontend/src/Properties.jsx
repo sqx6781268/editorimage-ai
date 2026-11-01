@@ -1,8 +1,11 @@
 // Proprieta' del livello selezionato (o del documento): ogni campo e' un
 // argomento di un'operazione di Store, inviato quando si lascia il controllo.
+// 汉化说明：所有显示文案走 i18n.js；<option> 一律显式给 value，避免把中文
+// 文本当成提交给后端的值。
 import { useEffect, useState } from 'react'
 import Icon from './Icons.jsx'
-import { colorHex, defaultParams, fmtNum, stepFor, titleCase } from './util.js'
+import { colorHex, defaultParams, fmtNum, stepFor } from './util.js'
+import { blendName, fontName, fxName, groupName, pmName, t, typeName } from './i18n.js'
 
 // slider che invia solo al rilascio: ogni invio e' un render sul server
 export function Slider({ label, value, min, max, step, onCommit }) {
@@ -47,23 +50,23 @@ function EffectEditor({ layer, effect, index, catalog, run }) {
   return (
     <div className={'effect' + (effect.enabled === false ? ' off' : '')}>
       <div className="effect-head">
-        <input type="checkbox" checked={effect.enabled !== false} title="On/off"
+        <input type="checkbox" checked={effect.enabled !== false} title={t('On/off')}
           onChange={e => run('update_effect', { layer: layer.id, index, enabled: e.target.checked })} />
-        <button className="link" onClick={() => setOpen(!open)}>{titleCase(effect.type)} {open ? '▾' : '▸'}</button>
+        <button className="link" onClick={() => setOpen(!open)}>{fxName(effect.type)} {open ? '▾' : '▸'}</button>
         <span className="grow" />
-        <button className="icon-btn" title="Earlier" disabled={index === 0}
+        <button className="icon-btn" title={t('Earlier')} disabled={index === 0}
           onClick={() => run('move_effect', { layer: layer.id, index, to: index - 1 })}><Icon name="up" size={13} /></button>
-        <button className="icon-btn" title="Remove" onClick={() => run('remove_effect', { layer: layer.id, index })}><Icon name="trash" size={13} /></button>
+        <button className="icon-btn" title={t('Remove')} onClick={() => run('remove_effect', { layer: layer.id, index })}><Icon name="trash" size={13} /></button>
       </div>
       {open && spec && Object.entries(spec.params).map(([k, p]) => {
         const val = effect.params?.[k] ?? p.default
         if (p.type === 'number' || p.type === 'int')
-          return <Slider key={k} label={k} value={val} min={p.min} max={p.max} step={stepFor(p)} onCommit={x => upd(k, x)} />
-        if (p.type === 'color') return <Color key={k} label={k} value={val} onCommit={x => upd(k, x)} />
+          return <Slider key={k} label={pmName(k)} value={val} min={p.min} max={p.max} step={stepFor(p)} onCommit={x => upd(k, x)} />
+        if (p.type === 'color') return <Color key={k} label={pmName(k)} value={val} onCommit={x => upd(k, x)} />
         if (p.type === 'bool') return (
-          <label key={k} className="check"><input type="checkbox" checked={!!val} onChange={e => upd(k, e.target.checked)} /> {k}</label>)
+          <label key={k} className="check"><input type="checkbox" checked={!!val} onChange={e => upd(k, e.target.checked)} /> {pmName(k)}</label>)
         if (p.type === 'points') return (
-          <label key={k} className="numfield wide"><span>{k}</span>
+          <label key={k} className="numfield wide"><span>{pmName(k)}</span>
             <input defaultValue={val ? JSON.stringify(val) : ''} placeholder="[[0,0],[128,140],[255,255]]"
               onBlur={e => { try { upd(k, e.target.value ? JSON.parse(e.target.value) : null) } catch { /* json rotto */ } }} />
           </label>)
@@ -77,25 +80,25 @@ export default function Properties({ project, layer, catalog, run, selection, on
   if (!project) return null
   if (!layer) return (
     <div className="props">
-      <h4>Document</h4>
+      <h4>{t('Document')}</h4>
       <div className="grid2">
         <Num label="W" value={project.width} onCommit={w => run('resize_canvas', { width: w, height: project.height })} />
         <Num label="H" value={project.height} onCommit={h => run('resize_canvas', { width: project.width, height: h })} />
       </div>
       <div className="row">
-        <Color label="Background" value={project.background} onCommit={c => run('set_document', { background: c })} />
+        <Color label={t('Background')} value={project.background} onCommit={c => run('set_document', { background: c })} />
         <label className="check"><input type="checkbox" checked={project.background === 'transparent'}
-          onChange={e => run('set_document', { background: e.target.checked ? 'transparent' : '#ffffff' })} /> transparent</label>
+          onChange={e => run('set_document', { background: e.target.checked ? 'transparent' : '#ffffff' })} /> {t('transparent')}</label>
       </div>
       <div className="row wrap">
         <button onClick={() => {
-          const w = prompt('New width in px (proportions kept):', project.width)
+          const w = prompt(t('New width in px (proportions kept):'), project.width)
           if (w) run('resize_image', { width: +w })
-        }}>Resize image…</button>
-        <button onClick={() => openDialog('expand')}><Icon name="expand" size={13} /> Expand canvas…</button>
-        <button onClick={() => openDialog('describe', {})}><Icon name="eye2" size={13} /> Describe</button>
+        }}>{t('Resize image…')}</button>
+        <button onClick={() => openDialog('expand')}><Icon name="expand" size={13} /> {t('Expand canvas…')}</button>
+        <button onClick={() => openDialog('describe', {})}><Icon name="eye2" size={13} /> {t('Describe')}</button>
       </div>
-      <p className="hint">Select a layer to edit it. Drag a box with the selection tool to mask, crop or remove things.</p>
+      <p className="hint">{t('Select a layer to edit it. Drag a box with the selection tool to mask, crop or remove things.')}</p>
     </div>
   )
 
@@ -107,124 +110,125 @@ export default function Properties({ project, layer, catalog, run, selection, on
 
   return (
     <div className="props">
-      <h4>{titleCase(layer.type)} · {layer.name}</h4>
-      <Slider label="Opacity" value={layer.opacity ?? 1} min={0} max={1} step={0.01}
+      <h4>{typeName(layer.type)} · {layer.name}</h4>
+      <Slider label={t('Opacity')} value={layer.opacity ?? 1} min={0} max={1} step={0.01}
         onCommit={v => run('set_layer', { layer: L, opacity: v })} />
-      <label className="numfield wide"><span>Blend</span>
+      <label className="numfield wide"><span>{t('Blend')}</span>
         <select value={layer.blend || 'normal'} onChange={e => run('set_layer', { layer: L, blend: e.target.value })}>
           {(layer.type === 'group' ? ['pass_through'] : []).concat(blendModes || ['normal'])
-            .map(b => <option key={b} value={b}>{b === 'add' ? 'Linear dodge (add)' : titleCase(b)}</option>)}
+            .map(b => <option key={b} value={b}>{blendName(b)}</option>)}
         </select>
       </label>
-      {layer.type !== 'group' && <label className="check" title="Show this layer only where the layer below has pixels">
-        <input type="checkbox" checked={!!layer.clip} onChange={e => run('set_layer', { layer: L, clip: e.target.checked })} /> Clip to layer below</label>}
+      {layer.type !== 'group' && <label className="check" title={t('Show this layer only where the layer below has pixels')}>
+        <input type="checkbox" checked={!!layer.clip} onChange={e => run('set_layer', { layer: L, clip: e.target.checked })} /> {t('Clip to layer below')}</label>}
       {layer.type === 'group' && <p className="hint">
-        {layer.blend === 'pass_through' ? 'Pass through: adjustments inside the group affect everything below it.'
-          : 'Isolated: adjustments inside the group affect only the group.'}</p>}
+        {layer.blend === 'pass_through' ? t('Pass through: adjustments inside the group affect everything below it.')
+          : t('Isolated: adjustments inside the group affect only the group.')}</p>}
 
       {box && <>
-        <h5>Transform</h5>
+        <h5>{t('Transform')}</h5>
         <div className="grid2">
           <Num label="X" value={box[0]} onCommit={x => run('set_transform', { layer: L, x })} />
           <Num label="Y" value={box[1]} onCommit={y => run('set_transform', { layer: L, y })} />
           <Num label="W" value={box[2]} onCommit={w => run('set_transform', { layer: L, width: w })} />
-          <Num label="Rot°" value={layer.rotation || 0} onCommit={r => run('set_transform', { layer: L, rotation: r })} />
+          <Num label={t('Rot°')} value={layer.rotation || 0} onCommit={r => run('set_transform', { layer: L, rotation: r })} />
         </div>
         <div className="row">
-          <button onClick={() => run('align_layer', { layer: L, h: 'center', v: 'middle' })}>Center</button>
-          <button onClick={() => run('set_transform', { layer: L, flip_h: !(layer.flip && layer.flip[0]) })}>Flip H</button>
-          <button onClick={() => run('set_transform', { layer: L, flip_v: !(layer.flip && layer.flip[1]) })}>Flip V</button>
+          <button onClick={() => run('align_layer', { layer: L, h: 'center', v: 'middle' })}>{t('Center')}</button>
+          <button onClick={() => run('set_transform', { layer: L, flip_h: !(layer.flip && layer.flip[0]) })}>{t('Flip H')}</button>
+          <button onClick={() => run('set_transform', { layer: L, flip_v: !(layer.flip && layer.flip[1]) })}>{t('Flip V')}</button>
         </div>
       </>}
 
       {layer.type === 'text' && <>
-        <h5>Text</h5>
+        <h5>{t('Text')}</h5>
         <textarea defaultValue={layer.text} key={layer.text} rows={2}
           onBlur={e => e.target.value !== layer.text && run('set_text', { layer: L, text: e.target.value })} />
         <div className="grid2">
-          <Num label="Size" value={layer.style.size} onCommit={size => run('set_text', { layer: L, size })} />
-          <Color label="Color" value={layer.style.color} onCommit={color => run('set_text', { layer: L, color })} />
-          <label className="numfield"><span>Font</span>
+          <Num label={t('Size')} value={layer.style.size} onCommit={size => run('set_text', { layer: L, size })} />
+          <Color label={t('Color')} value={layer.style.color} onCommit={color => run('set_text', { layer: L, color })} />
+          <label className="numfield"><span>{t('Font')}</span>
             <select value={layer.style.font} onChange={e => run('set_text', { layer: L, font: e.target.value })}>
               {['sans', 'serif', 'mono', 'display', 'handwriting'].concat(
                 ['sans', 'serif', 'mono', 'display', 'handwriting'].includes(layer.style.font) ? [] : [layer.style.font])
-                .map(f => <option key={f}>{f}</option>)}
+                .map(f => <option key={f} value={f}>{fontName(f)}</option>)}
             </select></label>
           <label className="check"><input type="checkbox" checked={!!layer.style.bold}
-            onChange={e => run('set_text', { layer: L, bold: e.target.checked })} /> bold</label>
-          <Num label="Outline" value={layer.style.stroke_width} onCommit={v => run('set_text', { layer: L, stroke_width: v })} />
-          <Color label="Outline" value={layer.style.stroke_color} onCommit={v => run('set_text', { layer: L, stroke_color: v })} />
+            onChange={e => run('set_text', { layer: L, bold: e.target.checked })} /> {t('Bold')}</label>
+          <Num label={t('Outline')} value={layer.style.stroke_width} onCommit={v => run('set_text', { layer: L, stroke_width: v })} />
+          <Color label={t('Outline')} value={layer.style.stroke_color} onCommit={v => run('set_text', { layer: L, stroke_color: v })} />
         </div>
       </>}
 
       {layer.type === 'shape' && <>
-        <h5>Shape</h5>
+        <h5>{t('Shape')}</h5>
         <div className="grid2">
-          <Color label="Fill" value={layer.shape.fill} onCommit={fill => run('set_shape', { layer: L, fill })} />
-          <Color label="Stroke" value={layer.shape.stroke} onCommit={stroke => run('set_shape', { layer: L, stroke })} />
-          <Num label="Stroke px" value={layer.shape.stroke_width} onCommit={v => run('set_shape', { layer: L, stroke_width: v })} />
-          <Num label="Radius" value={layer.shape.radius} onCommit={v => run('set_shape', { layer: L, radius: v })} />
+          <Color label={t('Fill')} value={layer.shape.fill} onCommit={fill => run('set_shape', { layer: L, fill })} />
+          <Color label={t('Stroke')} value={layer.shape.stroke} onCommit={stroke => run('set_shape', { layer: L, stroke })} />
+          <Num label={t('Stroke px')} value={layer.shape.stroke_width} onCommit={v => run('set_shape', { layer: L, stroke_width: v })} />
+          <Num label={t('Radius')} value={layer.shape.radius} onCommit={v => run('set_shape', { layer: L, radius: v })} />
         </div>
       </>}
 
       {layer.type === 'fill' && <>
-        <h5>Fill</h5>
-        <label className="numfield wide"><span>Kind</span>
+        <h5>{t('Fill')}</h5>
+        <label className="numfield wide"><span>{t('Kind')}</span>
           <select value={layer.fill.kind} onChange={e => run('set_fill', { layer: L, kind: e.target.value })}>
-            <option>solid</option><option>linear</option><option>radial</option></select></label>
+            <option value="solid">{t('solid')}</option><option value="linear">{t('linear')}</option>
+            <option value="radial">{t('radial')}</option></select></label>
         <div className="grid2">
-          <Color label="Color" value={layer.fill.color} onCommit={color => run('set_fill', { layer: L, color })} />
-          <Color label="Color 2" value={layer.fill.color2} onCommit={color2 => run('set_fill', { layer: L, color2 })} />
-          <Num label="Angle" value={layer.fill.angle} onCommit={angle => run('set_fill', { layer: L, angle })} />
+          <Color label={t('Color')} value={layer.fill.color} onCommit={color => run('set_fill', { layer: L, color })} />
+          <Color label={t('Color 2')} value={layer.fill.color2} onCommit={color2 => run('set_fill', { layer: L, color2 })} />
+          <Num label={t('Angle')} value={layer.fill.angle} onCommit={angle => run('set_fill', { layer: L, angle })} />
         </div>
       </>}
 
-      <h5>Mask</h5>
+      <h5>{t('Mask')}</h5>
       {layer.mask ? <>
         <div className="row wrap">
-          <span className="tag">{layer.mask.kind}{layer.mask.invert ? ' · inverted' : ''}{layer.mask.strokes ? ` · ${layer.mask.strokes} strokes` : ''}</span>
-          <button onClick={() => run('update_mask', { layer: L, invert: !layer.mask.invert })}>Invert</button>
-          {layer.mask.strokes > 0 && <button title="Remove the last brush stroke on the mask"
-            onClick={() => run('remove_mask_stroke', { layer: L })}>Undo stroke</button>}
-          <button onClick={() => run('remove_mask', { layer: L })}>Remove</button>
+          <span className="tag">{t(layer.mask.kind)}{layer.mask.invert ? ' · ' + t('inverted') : ''}{layer.mask.strokes ? ` · ${layer.mask.strokes} ${t('strokes')}` : ''}</span>
+          <button onClick={() => run('update_mask', { layer: L, invert: !layer.mask.invert })}>{t('Invert')}</button>
+          {layer.mask.strokes > 0 && <button title={t('Remove the last brush stroke on the mask')}
+            onClick={() => run('remove_mask_stroke', { layer: L })}>{t('Undo stroke')}</button>}
+          <button onClick={() => run('remove_mask', { layer: L })}>{t('Remove')}</button>
         </div>
-        <p className="hint">{maskMode ? 'Brush and eraser are painting on this mask (black hides, white reveals).'
-          : 'Pick the brush and switch “Paint on: mask” to refine it.'}</p>
-        <Slider label="Feather" value={layer.mask.feather || 0} min={0} max={200} step={1}
+        <p className="hint">{maskMode ? t('Brush and eraser are painting on this mask (black hides, white reveals).')
+          : t('Pick the brush and switch “Paint on: mask” to refine it.')}</p>
+        <Slider label={t('Feather')} value={layer.mask.feather || 0} min={0} max={200} step={1}
           onCommit={v => run('update_mask', { layer: L, feather: v })} />
       </> : <div className="row">
-        <button disabled={!selection} title="Use the current selection as mask"
-          onClick={() => run('set_mask', { layer: L, kind: selection.kind, box: selection.box, feather: 0 })}>From selection</button>
-        <button title="A mask to paint with the brush (starts fully visible)"
-          onClick={() => run('set_mask', { layer: L, kind: 'paint' })}>Paint mask</button>
-        <button title="A mask to paint that starts fully hidden: paint to reveal"
-          onClick={() => run('set_mask', { layer: L, kind: 'paint', hide_all: true })}>Hide all</button>
-        {layer.type === 'image' && <button onClick={() => onAI('remove_background', { layer: L })}><Icon name="wand" size={13} /> Remove BG</button>}
+        <button disabled={!selection} title={t('Use the current selection as mask')}
+          onClick={() => run('set_mask', { layer: L, kind: selection.kind, box: selection.box, feather: 0 })}>{t('From selection')}</button>
+        <button title={t('A mask to paint with the brush (starts fully visible)')}
+          onClick={() => run('set_mask', { layer: L, kind: 'paint' })}>{t('Paint mask')}</button>
+        <button title={t('A mask to paint that starts fully hidden: paint to reveal')}
+          onClick={() => run('set_mask', { layer: L, kind: 'paint', hide_all: true })}>{t('Hide all')}</button>
+        {layer.type === 'image' && <button onClick={() => onAI('remove_background', { layer: L })}><Icon name="wand" size={13} /> {t('Remove BG')}</button>}
       </div>}
 
       {layer.type === 'image' && <>
-        <h5>AI</h5>
+        <h5>{t('AI')}</h5>
         <div className="row wrap">
-          <button onClick={() => onAI('auto_enhance', { layer: L })}><Icon name="sparkle" size={13} /> Enhance</button>
-          <button onClick={() => onAI('upscale', { layer: L, factor: 2 })}>Upscale ×2</button>
-          <button title="Image-to-image: redo this layer following a prompt" onClick={() => openDialog('edit', { layer: L })}>
-            <Icon name="sparkle" size={13} /> Edit with AI…</button>
-          <button title="Image-to-text: a vision model describes this layer" onClick={() => openDialog('describe', { layer: L })}>
-            <Icon name="eye2" size={13} /> Describe</button>
-          <button onClick={() => run('rasterize_layer', { layer: L })} title="Bake effects and mask into pixels">Rasterize</button>
+          <button onClick={() => onAI('auto_enhance', { layer: L })}><Icon name="sparkle" size={13} /> {t('Enhance')}</button>
+          <button onClick={() => onAI('upscale', { layer: L, factor: 2 })}>{t('Upscale ×2')}</button>
+          <button title={t('Image-to-image: redo this layer following a prompt')} onClick={() => openDialog('edit', { layer: L })}>
+            <Icon name="sparkle" size={13} /> {t('Edit with AI…')}</button>
+          <button title={t('Image-to-text: a vision model describes this layer')} onClick={() => openDialog('describe', { layer: L })}>
+            <Icon name="eye2" size={13} /> {t('Describe')}</button>
+          <button onClick={() => run('rasterize_layer', { layer: L })} title={t('Bake effects and mask into pixels')}>{t('Rasterize')}</button>
         </div>
       </>}
       {['text', 'shape', 'paint'].includes(layer.type) &&
-        <button onClick={() => run('rasterize_layer', { layer: L })}>Rasterize</button>}
+        <button onClick={() => run('rasterize_layer', { layer: L })}>{t('Rasterize')}</button>}
 
-      <h5>Effects</h5>
+      <h5>{t('Effects')}</h5>
       {(layer.effects || []).map((e, i) => (
         <EffectEditor key={i + e.type} layer={layer} effect={e} index={i} catalog={catalog} run={run} />))}
       <select value="" onChange={e => e.target.value && addFx(e.target.value)}>
-        <option value="">+ Add effect…</option>
+        <option value="">{t('+ Add effect…')}</option>
         {['color', 'detail', 'stylize', 'style'].map(g => (
-          <optgroup key={g} label={titleCase(g)}>
-            {filters.filter(e => e.group === g).map(e => <option key={e.name} value={e.name}>{titleCase(e.name)}</option>)}
+          <optgroup key={g} label={groupName(g)}>
+            {filters.filter(e => e.group === g).map(e => <option key={e.name} value={e.name}>{fxName(e.name)}</option>)}
           </optgroup>))}
       </select>
     </div>
